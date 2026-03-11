@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: 'postgres:16'
+    container_name: 'inkmap-db'
+    environment:
+      - 'POSTGRES_DB=inkmapdb'
+      - 'POSTGRES_PASSWORD=inkmap-password'
+      - 'POSTGRES_USER=biblioteca_user'
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
