@@ -7,6 +7,9 @@ import com.google.api.client.json.gson.GsonFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
@@ -39,7 +42,7 @@ public class GoogleTokenVerifierService {
         GoogleIdToken googleIdToken = verifier.verify(credential);
 
         if (googleIdToken == null) {
-            throw new RuntimeException("Token de Google inválido");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Google token");
         }
 
         return googleIdToken.getPayload();

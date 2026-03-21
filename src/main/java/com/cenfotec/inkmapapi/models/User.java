@@ -26,4 +26,7 @@ public class User {
 
     @Column(name = "proveedor")
     private String provider;
+
+    @Column(name = "contrasena")
+    private String password;
 }
