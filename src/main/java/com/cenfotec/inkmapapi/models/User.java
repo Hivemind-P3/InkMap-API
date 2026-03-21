@@ -29,4 +29,7 @@ public class User {
 
     @Column(name = "contrasena")
     private String password;
+
+    @Column(name = "rol")
+    private String role;
 }
