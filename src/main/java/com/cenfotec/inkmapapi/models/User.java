@@ -3,6 +3,9 @@ package com.cenfotec.inkmapapi.models;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 /**
  * Entidad que representa un usuario dentro del sistema.
@@ -32,4 +35,8 @@ public class User {
 
     @Column(name = "rol")
     private String role;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime startDt;
 }

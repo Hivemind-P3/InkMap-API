@@ -103,7 +103,7 @@ public class AuthService {
 
     private AuthResponseDTO buildAuthResponse(User user) {
         String token = jwtService.generateToken(user);
-        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole());
+        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole(), user.getStartDt());
         return new AuthResponseDTO(token, userDto);
     }
 }
