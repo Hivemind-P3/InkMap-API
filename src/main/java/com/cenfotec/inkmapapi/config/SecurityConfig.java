@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -22,13 +23,11 @@ import java.util.List;
 
 /**
  * Configuración de seguridad.
- *
+ * <p>
  * Define un UserDetailsService propio para evitar que Spring Security
  * auto-configure InMemoryUserDetailsManager y genere un password por defecto.
+ * <p>
  *
- * Fase actual: los endpoints /auth/** son públicos y devuelven JWT.
- * Fase 2 pendiente: agregar JwtAuthenticationFilter para validar el token
- * en endpoints protegidos.
  */
 @Configuration
 public class SecurityConfig {
@@ -88,8 +87,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                    AuthenticationProvider authenticationProvider,
-                                                    CorsConfigurationSource corsConfigurationSource) throws Exception {
+                                                   AuthenticationProvider authenticationProvider,
+                                                   CorsConfigurationSource corsConfigurationSource,
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
@@ -97,6 +97,7 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/error").permitAll()
