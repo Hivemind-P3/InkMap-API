@@ -1,16 +1,18 @@
 package com.cenfotec.inkmapapi.service;
 
 import com.cenfotec.inkmapapi.dto.CreateProjectRequestDTO;
+import com.cenfotec.inkmapapi.dto.PagedProjectResponseDTO;
 import com.cenfotec.inkmapapi.dto.ProjectResponseDTO;
 import com.cenfotec.inkmapapi.models.Project;
 import com.cenfotec.inkmapapi.models.User;
 import com.cenfotec.inkmapapi.repository.ProjectRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @Service
 public class ProjectService {
@@ -24,16 +26,36 @@ public class ProjectService {
     }
 
     /**
-     * Returns all projects belonging to the authenticated user, ordered by creation date descending.
+     * Returns a paginated list of projects for the authenticated user.
+     * Optionally filters by title or tag (case-insensitive).
+     * Routes to a simple derived query when search is absent to avoid
+     * collection-join + pagination issues in Hibernate 6.
      *
-     * @param email email extracted from the JWT subject (authentication.getName())
-     * @return list of project response DTOs
+     * @param email  email extracted from the JWT subject (authentication.getName())
+     * @param search optional search term matched against title and tags
+     * @param page   zero-based page index (default 0)
+     * @param size   number of items per page (default 10)
+     * @return paged response DTO
      */
-    public List<ProjectResponseDTO> getProjectsForAuthenticatedUser(String email) {
+    public PagedProjectResponseDTO getProjectsForAuthenticatedUser(String email, String search, int page, int size) {
         User user = resolveUser(email);
-        return projectRepository.findByUserOrderByCreatedAtDesc(user).stream()
-                .map(this::toDTO)
-                .toList();
+
+        String normalizedSearch = (search == null || search.isBlank()) ? null : search.trim();
+
+        PageRequest pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Project> resultPage = (normalizedSearch == null)
+                ? projectRepository.findByUserOrderByCreatedAtDesc(user, pageable)
+                : projectRepository.findByUserWithSearch(user, normalizedSearch, pageable);
+
+        return new PagedProjectResponseDTO(
+                resultPage.getContent().stream().map(this::toDTO).toList(),
+                resultPage.getNumber(),
+                resultPage.getSize(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages(),
+                resultPage.isLast()
+        );
     }
 
     /**

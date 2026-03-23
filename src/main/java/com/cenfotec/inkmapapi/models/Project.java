@@ -30,7 +30,7 @@ public class Project {
 
     @ElementCollection
     @CollectionTable(name = "proyecto_tags", joinColumns = @JoinColumn(name = "proyecto_id"))
-    @Column(name = "tag")
+    @Column(name = "tag", columnDefinition = "TEXT")
     private List<String> tags;
 
     @CreationTimestamp
