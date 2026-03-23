@@ -1,10 +1,8 @@
 package com.cenfotec.inkmapapi.controller;
 
-import com.cenfotec.inkmapapi.dto.AuthResponseDTO;
-import com.cenfotec.inkmapapi.dto.GoogleAuthRequestDTO;
-import com.cenfotec.inkmapapi.dto.LoginRequestDTO;
-import com.cenfotec.inkmapapi.dto.RegisterRequestDTO;
+import com.cenfotec.inkmapapi.dto.*;
 import com.cenfotec.inkmapapi.service.AuthService;
+import com.cenfotec.inkmapapi.service.PasswordService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +18,11 @@ import java.security.GeneralSecurityException;
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordService passwordService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, PasswordService passwordService) {
         this.authService = authService;
+        this.passwordService = passwordService;
     }
 
     /**
@@ -59,5 +59,17 @@ public class AuthController {
     public ResponseEntity<AuthResponseDTO> loginWithGoogle(@RequestBody GoogleAuthRequestDTO request)
             throws GeneralSecurityException, IOException {
         return ResponseEntity.ok(authService.loginWithGoogle(request.getCredential()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO request) {
+        passwordService.requestPasswordReset(request.getEmail());
+        return ResponseEntity.ok("Correo enviado");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequestDTO request) {
+        passwordService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok("Contraseña actualizada");
     }
 }
