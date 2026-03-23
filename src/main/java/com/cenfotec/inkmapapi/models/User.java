@@ -1,11 +1,19 @@
 package com.cenfotec.inkmapapi.models;
 
+import com.cenfotec.inkmapapi.models.enums.RoleEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Entidad que representa un usuario dentro del sistema.
@@ -14,7 +22,7 @@ import java.time.LocalDateTime;
 @Table(name = "usuarios")
 @Getter
 @Setter
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,9 +42,24 @@ public class User {
     private String password;
 
     @Column(name = "rol")
-    private String role;
+    @Enumerated(EnumType.STRING)
+    private RoleEnum role = RoleEnum.USUARIO;
 
     @CreationTimestamp
-    @Column(updatable = false)
     private LocalDateTime startDt;
+
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @JsonIgnore
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @JsonIgnore
+    @Override
+    public String getUsername() {
+        return email;
+    }
 }

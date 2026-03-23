@@ -1,5 +1,6 @@
 package com.cenfotec.inkmapapi.dto;
 
+import com.cenfotec.inkmapapi.models.enums.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -13,6 +14,6 @@ public class UserResponseDTO {
     private String name;
     private String email;
     private String provider;
-    private String role;
+    private RoleEnum role;
     private LocalDateTime startDt;
 }

@@ -52,7 +52,6 @@ public class AuthService {
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("LOCAL");
-        user.setRole("USUARIO");
 
         user = userRepository.save(user);
         return buildAuthResponse(user);
@@ -94,7 +93,6 @@ public class AuthService {
             newUser.setEmail(email);
             newUser.setName(name);
             newUser.setProvider("GOOGLE");
-            newUser.setRole("USUARIO");
             return userRepository.save(newUser);
         });
 
