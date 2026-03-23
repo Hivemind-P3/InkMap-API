@@ -29,6 +29,8 @@ import java.util.List;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PreferencesRepository preferencesRepository;
+    private final ColorCodeRepository colorCodeRepository;
     private final GoogleTokenVerifierService googleTokenVerifierService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -104,7 +106,11 @@ public class AuthService {
 
     private AuthResponseDTO buildAuthResponse(User user) {
         String token = jwtService.generateToken(user);
-        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole(), user.getStartDt());
+
+        Preferences preferences = preferencesRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preferences not found for user " + user.getId()));
+
+        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole(), user.getStartDt(), preferences);
         return new AuthResponseDTO(token, userDto);
     }
 }

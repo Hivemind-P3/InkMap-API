@@ -1,5 +1,6 @@
 package com.cenfotec.inkmapapi.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +35,7 @@ public class Preferences {
     @JoinColumn(name = "id_codigoColor")
     private ColorCode colorCode;
 
+    @JsonIgnore
     @OneToOne
     @JoinColumn(name = "usuario_id")
     private User user;

@@ -1,5 +1,7 @@
 package com.cenfotec.inkmapapi.dto;
 
+import com.cenfotec.inkmapapi.models.ColorCode;
+import com.cenfotec.inkmapapi.models.Preferences;
 import com.cenfotec.inkmapapi.models.enums.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,4 +18,5 @@ public class UserResponseDTO {
     private String provider;
     private RoleEnum role;
     private LocalDateTime startDt;
+    private Preferences preferences;
 }
