@@ -32,7 +32,7 @@ public class Preferences {
 
     @OneToOne
     @JoinColumn(name = "id_codigoColor")
-    private CodigoColor codigoColor;
+    private ColorCode colorCode;
 
     @OneToOne
     @JoinColumn(name = "usuario_id")

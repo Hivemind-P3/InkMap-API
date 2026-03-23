@@ -4,9 +4,14 @@ import com.cenfotec.inkmapapi.dto.AuthResponseDTO;
 import com.cenfotec.inkmapapi.dto.LoginRequestDTO;
 import com.cenfotec.inkmapapi.dto.RegisterRequestDTO;
 import com.cenfotec.inkmapapi.dto.UserResponseDTO;
+import com.cenfotec.inkmapapi.models.ColorCode;
+import com.cenfotec.inkmapapi.models.Preferences;
 import com.cenfotec.inkmapapi.models.User;
+import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
+import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,27 +19,20 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 /**
  * Servicio encargado de la lógica de autenticación.
  */
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final GoogleTokenVerifierService googleTokenVerifierService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
-    public AuthService(UserRepository userRepository,
-                       GoogleTokenVerifierService googleTokenVerifierService,
-                       PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
-        this.userRepository = userRepository;
-        this.googleTokenVerifierService = googleTokenVerifierService;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-    }
+    private final PreferencesService preferencesService;
 
     /**
      * Registra un nuevo usuario local con email y contraseña.
@@ -52,8 +50,10 @@ public class AuthService {
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("LOCAL");
-
         user = userRepository.save(user);
+
+        preferencesService.setDefaultPreferences(user);
+
         return buildAuthResponse(user);
     }
 
@@ -93,6 +93,9 @@ public class AuthService {
             newUser.setEmail(email);
             newUser.setName(name);
             newUser.setProvider("GOOGLE");
+
+            preferencesService.setDefaultPreferences(newUser);
+
             return userRepository.save(newUser);
         });
 

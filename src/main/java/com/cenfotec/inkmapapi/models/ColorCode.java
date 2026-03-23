@@ -15,13 +15,18 @@ import java.util.List;
 @Table(name = "codigoColor")
 @Getter
 @Setter
-public class CodigoColor {
+public class ColorCode {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_codigoColor")
     private Long id;
 
-    @Column(nullable = false)
+    @ElementCollection
+    @CollectionTable(
+            name = "codigo_color_colores",
+            joinColumns = @JoinColumn(name = "id_codigoColor")
+    )
+    @Column(name = "codigosHex")
     private List<String> colores = new ArrayList<>();
 }
