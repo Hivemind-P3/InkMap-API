@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * Servicio encargado de manejar la lógica de gestión de usuarios
+ */
 @Service
 @RequiredArgsConstructor
 public class UserService {
