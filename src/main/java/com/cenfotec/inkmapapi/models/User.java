@@ -33,8 +33,9 @@ public class User {
     @Column(name = "contrasena")
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "rol")
-    private String role;
+    private Role role;
 
     @CreationTimestamp
     @Column(updatable = false)
