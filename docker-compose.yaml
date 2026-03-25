@@ -4,8 +4,8 @@ services:
     container_name: 'inkmap-db'
     environment:
       - 'POSTGRES_DB=inkmapdb'
-      - 'POSTGRES_PASSWORD=inkmap-password'
-      - 'POSTGRES_USER=inkmap-user'
+      - 'POSTGRES_PASSWORD=inkmappassword'
+      - 'POSTGRES_USER=inkmapuser'
     ports:
       - '5432:5432'
     volumes:

@@ -4,8 +4,10 @@ import com.cenfotec.inkmapapi.dto.AuthResponseDTO;
 import com.cenfotec.inkmapapi.dto.LoginRequestDTO;
 import com.cenfotec.inkmapapi.dto.RegisterRequestDTO;
 import com.cenfotec.inkmapapi.dto.UserResponseDTO;
+import com.cenfotec.inkmapapi.models.Role;
 import com.cenfotec.inkmapapi.models.User;
 import com.cenfotec.inkmapapi.repository.UserRepository;
+import com.cenfotec.inkmapapi.util.PasswordValidator;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -47,12 +49,14 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
+        PasswordValidator.validate(request.getPassword());
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("LOCAL");
-        user.setRole("USUARIO");
+        user.setRole(Role.USER);
 
         user = userRepository.save(user);
         return buildAuthResponse(user);
@@ -94,7 +98,7 @@ public class AuthService {
             newUser.setEmail(email);
             newUser.setName(name);
             newUser.setProvider("GOOGLE");
-            newUser.setRole("USUARIO");
+            newUser.setRole(Role.USER);
             return userRepository.save(newUser);
         });
 
@@ -103,7 +107,7 @@ public class AuthService {
 
     private AuthResponseDTO buildAuthResponse(User user) {
         String token = jwtService.generateToken(user);
-        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole(), user.getStartDt());
+        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole().name(), user.getStartDt());
         return new AuthResponseDTO(token, userDto);
     }
 }
