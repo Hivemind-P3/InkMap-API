@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * Entidad que representa un usuario dentro del sistema.
@@ -40,4 +41,7 @@ public class User {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime startDt;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Project> projects;
 }
