@@ -1,6 +1,6 @@
 package com.cenfotec.inkmapapi.controller;
 
-import com.cenfotec.inkmapapi.models.User;
+import com.cenfotec.inkmapapi.dto.UpdatePreferencesRequestDTO;
 import com.cenfotec.inkmapapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +15,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
-        return userService.updateUser(id, user);
+    public ResponseEntity<?> updateUserProfile(@PathVariable Long id, @RequestBody UpdatePreferencesRequestDTO dto) {
+        return userService.updateUser(id, dto);
     }
-
 }
