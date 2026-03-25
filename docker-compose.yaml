@@ -5,7 +5,7 @@ services:
     environment:
       - 'POSTGRES_DB=inkmapdb'
       - 'POSTGRES_PASSWORD=inkmap-password'
-      - 'POSTGRES_USER=biblioteca_user'
+      - 'POSTGRES_USER=inkmap-user'
     ports:
       - '5432:5432'
     volumes:

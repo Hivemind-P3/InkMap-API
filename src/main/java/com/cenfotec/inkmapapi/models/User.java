@@ -41,9 +41,9 @@ public class User implements UserDetails {
     @Column(name = "contrasena")
     private String password;
 
-    @Column(name = "rol")
     @Enumerated(EnumType.STRING)
-    private RoleEnum role = RoleEnum.USUARIO;
+    @Column(name = "rol")
+    private Role role;
 
     @CreationTimestamp
     private LocalDateTime startDt;
