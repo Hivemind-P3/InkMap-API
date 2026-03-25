@@ -1,6 +1,7 @@
 package com.cenfotec.inkmapapi.controller;
 
 import com.cenfotec.inkmapapi.dto.UpdatePreferencesRequestDTO;
+import com.cenfotec.inkmapapi.dto.UserResponseDTO;
 import com.cenfotec.inkmapapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
