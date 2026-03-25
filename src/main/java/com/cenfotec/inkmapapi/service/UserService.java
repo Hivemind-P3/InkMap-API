@@ -4,6 +4,7 @@ import com.cenfotec.inkmapapi.dto.UpdatePreferencesRequestDTO;
 import com.cenfotec.inkmapapi.models.ColorCode;
 import com.cenfotec.inkmapapi.models.Preferences;
 import com.cenfotec.inkmapapi.models.User;
+import com.cenfotec.inkmapapi.models.enums.Role;
 import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
 import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
@@ -14,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import com.cenfotec.inkmapapi.dto.UserResponseDTO;
-import com.cenfotec.inkmapapi.models.Role;
 import com.cenfotec.inkmapapi.repository.PasswordResetTokenRepository;
 import java.util.List;
 
@@ -120,13 +120,17 @@ public class UserService {
     }
 
     private UserResponseDTO toDTO(User user) {
+        Preferences preferences = preferencesRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new RuntimeException("Preferences not found for user: " + user.getId()));
+
         return new UserResponseDTO(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getProvider(),
                 user.getRole().name(),
-                user.getStartDt()
+                user.getStartDt(),
+                preferences
         );
     }
 }

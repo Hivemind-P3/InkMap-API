@@ -15,7 +15,7 @@ public class UserResponseDTO {
     private String name;
     private String email;
     private String provider;
-    private Role role;
+    private String role;
     private LocalDateTime startDt;
     private Preferences preferences;
 }
