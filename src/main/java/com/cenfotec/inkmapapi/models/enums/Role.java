@@ -1,5 +1,6 @@
 package com.cenfotec.inkmapapi.models.enums;
 
-public enum RoleEnum {
-    USUARIO
+public enum Role {
+    USER,
+    ADMIN
 }
