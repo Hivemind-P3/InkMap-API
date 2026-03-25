@@ -9,6 +9,8 @@ import com.cenfotec.inkmapapi.dto.UpdateRoleDTO;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -20,17 +22,22 @@ public class UserController {
     public ResponseEntity<?> updateUserProfile(@PathVariable Long id, @RequestBody UpdatePreferencesRequestDTO dto) {
         return userService.updateUser(id, dto);
     }
-  
-    @PatchMapping("/{id}/role")
-    public void updateRole(@PathVariable Long id,
-                           @RequestBody UpdateRoleDTO dto,
-                           Authentication auth) {
 
-        userService.updateRole(id, dto.getRole(), auth.getName());
+    @GetMapping
+    public ResponseEntity<List<UserResponseDTO>> listUsers() {
+        return ResponseEntity.ok(userService.listUsers());
+    }
+
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<UserResponseDTO> updateRole(@PathVariable Long id,
+                                                      @RequestBody UpdateRoleDTO dto,
+                                                      Authentication auth) {
+        return ResponseEntity.ok(userService.updateRole(id, dto.getRole(), auth.getName()));
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id, Authentication auth) {
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id, Authentication auth) {
         userService.deleteUser(id, auth.getName());
+        return ResponseEntity.noContent().build();
     }
 }

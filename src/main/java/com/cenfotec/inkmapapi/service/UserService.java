@@ -4,7 +4,6 @@ import com.cenfotec.inkmapapi.dto.UpdatePreferencesRequestDTO;
 import com.cenfotec.inkmapapi.models.ColorCode;
 import com.cenfotec.inkmapapi.models.Preferences;
 import com.cenfotec.inkmapapi.models.User;
-import com.cenfotec.inkmapapi.models.enums.Role;
 import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
 import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
@@ -14,6 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import com.cenfotec.inkmapapi.dto.UserResponseDTO;
+import com.cenfotec.inkmapapi.models.Role;
+import com.cenfotec.inkmapapi.repository.PasswordResetTokenRepository;
+import java.util.List;
 
 import java.util.Optional;
 
@@ -28,6 +31,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final PreferencesRepository preferencesRepository;
     private final ColorCodeRepository colorCodeRepository;
+    private final PasswordResetTokenRepository tokenRepository;
 
     /**
      * Actualiza los campos de name, email y password del usuario y las preferencias
@@ -71,29 +75,58 @@ public class UserService {
         return ResponseEntity.ok(savedUser);
     }
 
-    public void updateRole(Long userId, String role, String currentUserEmail) {
+    public List<UserResponseDTO> listUsers() {
+        return userRepository.findAll().stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    public UserResponseDTO updateRole(Long userId, String role, String currentUserEmail) {
         User currentUser = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario autenticado no encontrado"));
 
         User targetUser = userRepository.findById(userId)
-                .orElseThrow();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         if (currentUser.getId().equals(targetUser.getId())) {
-            throw new RuntimeException("No puedes cambiar tu propio rol");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes cambiar tu propio rol");
         }
 
-        targetUser.setRole(Role.valueOf(role));
+        Role newRole;
+        try {
+            newRole = Role.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Rol inválido. Valores permitidos: USER, ADMIN");
+        }
+
+        targetUser.setRole(newRole);
         userRepository.save(targetUser);
+        return toDTO(targetUser);
     }
 
     public void deleteUser(Long userId, String currentUserEmail) {
         User currentUser = userRepository.findByEmail(currentUserEmail)
-                .orElseThrow();
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario autenticado no encontrado"));
 
         if (currentUser.getId().equals(userId)) {
-            throw new RuntimeException("No puedes borrarte a ti mismo");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No puedes eliminar tu propia cuenta");
         }
 
-        userRepository.deleteById(userId);
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        tokenRepository.findByUser(targetUser).ifPresent(tokenRepository::delete);
+        userRepository.delete(targetUser);
+    }
+
+    private UserResponseDTO toDTO(User user) {
+        return new UserResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getProvider(),
+                user.getRole().name(),
+                user.getStartDt()
+        );
     }
 }

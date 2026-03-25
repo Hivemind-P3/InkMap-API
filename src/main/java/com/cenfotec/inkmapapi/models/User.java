@@ -65,4 +65,7 @@ public class User implements UserDetails {
     public String getUsername() {
         return email;
     }
+  
+    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Project> projects;
 }

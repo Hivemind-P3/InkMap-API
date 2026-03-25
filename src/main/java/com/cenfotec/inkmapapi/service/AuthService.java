@@ -6,10 +6,12 @@ import com.cenfotec.inkmapapi.dto.RegisterRequestDTO;
 import com.cenfotec.inkmapapi.dto.UserResponseDTO;
 import com.cenfotec.inkmapapi.models.ColorCode;
 import com.cenfotec.inkmapapi.models.Preferences;
+import com.cenfotec.inkmapapi.models.Role;
 import com.cenfotec.inkmapapi.models.User;
 import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
 import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
+import com.cenfotec.inkmapapi.util.PasswordValidator;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -47,11 +49,14 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email already registered");
         }
 
+        PasswordValidator.validate(request.getPassword());
+
         User user = new User();
         user.setEmail(request.getEmail());
         user.setName(request.getName());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("LOCAL");
+        user.setRole(Role.USER);
         user = userRepository.save(user);
 
         preferencesService.setDefaultPreferences(user);
@@ -95,9 +100,9 @@ public class AuthService {
             newUser.setEmail(email);
             newUser.setName(name);
             newUser.setProvider("GOOGLE");
-
+            newUser.setRole(Role.USER);
+          
             preferencesService.setDefaultPreferences(newUser);
-
             return userRepository.save(newUser);
         });
 
@@ -106,11 +111,12 @@ public class AuthService {
 
     private AuthResponseDTO buildAuthResponse(User user) {
         String token = jwtService.generateToken(user);
-
+      
         Preferences preferences = preferencesRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preferences not found for user " + user.getId()));
-
-        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole(), user.getStartDt(), preferences);
+      
+        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole().name(), user.getStartDt(), preferences);
+      
         return new AuthResponseDTO(token, userDto);
     }
 }
