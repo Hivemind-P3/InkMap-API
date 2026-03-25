@@ -4,7 +4,7 @@ import com.cenfotec.inkmapapi.dto.UpdatePreferencesRequestDTO;
 import com.cenfotec.inkmapapi.models.ColorCode;
 import com.cenfotec.inkmapapi.models.Preferences;
 import com.cenfotec.inkmapapi.models.User;
-import com.cenfotec.inkmapapi.models.Role;
+import com.cenfotec.inkmapapi.models.enums.Role;
 import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
 import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
@@ -70,7 +70,6 @@ public class UserService {
         User savedUser = userRepository.save(updatedUser);
         return ResponseEntity.ok(savedUser);
     }
-}
 
     public void updateRole(Long userId, String role, String currentUserEmail) {
         User currentUser = userRepository.findByEmail(currentUserEmail)

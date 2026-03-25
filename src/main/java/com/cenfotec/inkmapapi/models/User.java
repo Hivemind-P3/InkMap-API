@@ -1,9 +1,10 @@
 package com.cenfotec.inkmapapi.models;
 
-import com.cenfotec.inkmapapi.models.enums.RoleEnum;
+import com.cenfotec.inkmapapi.models.enums.Role;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -53,12 +54,14 @@ public class User implements UserDetails {
 
     @JsonIgnore
     @Override
+    @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @JsonIgnore
     @Override
+    @NonNull
     public String getUsername() {
         return email;
     }
