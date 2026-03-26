@@ -3,6 +3,7 @@ package com.cenfotec.inkmapapi.controller;
 import com.cenfotec.inkmapapi.dto.CreateProjectRequestDTO;
 import com.cenfotec.inkmapapi.dto.PagedProjectResponseDTO;
 import com.cenfotec.inkmapapi.dto.ProjectResponseDTO;
+import com.cenfotec.inkmapapi.dto.UpdateProjectRequestDTO;
 import com.cenfotec.inkmapapi.service.ProjectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,5 +52,36 @@ public class ProjectController {
                                                             @RequestBody CreateProjectRequestDTO request) {
         String email = authentication.getName();
         return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(email, request));
+    }
+
+    /**
+     * Updates an existing project owned by the authenticated user.
+     *
+     * @param authentication injected by Spring Security from the validated JWT
+     * @param id             ID of the project to update
+     * @param request        updated project data (title, description, medium, tags)
+     * @return 200 OK with updated project, or 404/403/409 on errors
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<ProjectResponseDTO> updateProject(Authentication authentication,
+                                                            @PathVariable Long id,
+                                                            @RequestBody UpdateProjectRequestDTO request) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(projectService.updateProject(email, id, request));
+    }
+
+    /**
+     * Deletes a project owned by the authenticated user.
+     *
+     * @param authentication injected by Spring Security from the validated JWT
+     * @param id             ID of the project to delete
+     * @return 204 No Content, or 404/403 on errors
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProject(Authentication authentication,
+                                              @PathVariable Long id) {
+        String email = authentication.getName();
+        projectService.deleteProject(email, id);
+        return ResponseEntity.noContent().build();
     }
 }
