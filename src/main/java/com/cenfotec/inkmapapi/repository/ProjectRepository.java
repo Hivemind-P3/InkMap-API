@@ -46,4 +46,11 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
                                        Pageable pageable);
 
     Optional<Project> findByUserAndTitle(User user, String title);
+
+    /**
+     * Finds a project by user and title, excluding a specific project ID.
+     * Used during updates to allow keeping the same title while preventing
+     * duplicate titles with other projects owned by the same user.
+     */
+    Optional<Project> findByUserAndTitleAndIdNot(User user, String title, Long id);
 }

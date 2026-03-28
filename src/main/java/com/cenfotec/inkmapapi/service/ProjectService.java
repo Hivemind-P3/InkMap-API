@@ -3,6 +3,7 @@ package com.cenfotec.inkmapapi.service;
 import com.cenfotec.inkmapapi.dto.CreateProjectRequestDTO;
 import com.cenfotec.inkmapapi.dto.PagedProjectResponseDTO;
 import com.cenfotec.inkmapapi.dto.ProjectResponseDTO;
+import com.cenfotec.inkmapapi.dto.UpdateProjectRequestDTO;
 import com.cenfotec.inkmapapi.models.Project;
 import com.cenfotec.inkmapapi.models.User;
 import com.cenfotec.inkmapapi.repository.ProjectRepository;
@@ -82,6 +83,65 @@ public class ProjectService {
         project.setUser(user);
 
         return toDTO(projectRepository.save(project));
+    }
+
+    /**
+     * Updates an existing project owned by the authenticated user.
+     *
+     * @param email     email extracted from the JWT subject (authentication.getName())
+     * @param projectId ID of the project to update
+     * @param request   new project data (title, description, medium, tags)
+     * @return updated project DTO
+     */
+    public ProjectResponseDTO updateProject(String email, Long projectId, UpdateProjectRequestDTO request) {
+        validateUpdateRequest(request);
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+
+        if (!project.getUser().getEmail().equals(email)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to edit this project");
+        }
+
+        if (projectRepository.findByUserAndTitleAndIdNot(project.getUser(), request.getTitle().trim(), projectId).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "A project with this title already exists");
+        }
+
+        project.setTitle(request.getTitle().trim());
+        project.setDescription(request.getDescription().trim());
+        project.setMedium(request.getMedium().trim());
+        project.setTags(request.getTags());
+
+        return toDTO(projectRepository.save(project));
+    }
+
+    /**
+     * Deletes a project owned by the authenticated user.
+     *
+     * @param email     email extracted from the JWT subject (authentication.getName())
+     * @param projectId ID of the project to delete
+     */
+    public void deleteProject(String email, Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+
+        if (!project.getUser().getEmail().equals(email)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to delete this project");
+        }
+
+        projectRepository.delete(project);
+    }
+
+    private void validateUpdateRequest(UpdateProjectRequestDTO request) {
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title is required");
+        }
+        if (request.getDescription() == null || request.getDescription().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Description is required");
+        }
+        if (request.getMedium() == null || request.getMedium().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Medium is required");
+        }
     }
 
     private void validateCreateRequest(CreateProjectRequestDTO request) {
