@@ -100,9 +100,11 @@ public class AuthService {
             newUser.setName(name);
             newUser.setProvider("GOOGLE");
             newUser.setRole(Role.USER);
-          
+            userRepository.save(newUser);
+
             preferencesService.setDefaultPreferences(newUser);
-            return userRepository.save(newUser);
+
+            return newUser;
         });
 
         return buildAuthResponse(user);
