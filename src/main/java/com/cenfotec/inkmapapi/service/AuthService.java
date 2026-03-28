@@ -4,11 +4,15 @@ import com.cenfotec.inkmapapi.dto.AuthResponseDTO;
 import com.cenfotec.inkmapapi.dto.LoginRequestDTO;
 import com.cenfotec.inkmapapi.dto.RegisterRequestDTO;
 import com.cenfotec.inkmapapi.dto.UserResponseDTO;
-import com.cenfotec.inkmapapi.models.Role;
+import com.cenfotec.inkmapapi.models.Preferences;
 import com.cenfotec.inkmapapi.models.User;
+import com.cenfotec.inkmapapi.models.enums.Role;
+import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
+import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
 import com.cenfotec.inkmapapi.util.PasswordValidator;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,27 +20,22 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.List;
 
 /**
  * Servicio encargado de la lógica de autenticación.
  */
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final PreferencesRepository preferencesRepository;
+    private final ColorCodeRepository colorCodeRepository;
     private final GoogleTokenVerifierService googleTokenVerifierService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-
-    public AuthService(UserRepository userRepository,
-                       GoogleTokenVerifierService googleTokenVerifierService,
-                       PasswordEncoder passwordEncoder,
-                       JwtService jwtService) {
-        this.userRepository = userRepository;
-        this.googleTokenVerifierService = googleTokenVerifierService;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-    }
+    private final PreferencesService preferencesService;
 
     /**
      * Registra un nuevo usuario local con email y contraseña.
@@ -57,8 +56,10 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setProvider("LOCAL");
         user.setRole(Role.USER);
-
         user = userRepository.save(user);
+
+        preferencesService.setDefaultPreferences(user);
+
         return buildAuthResponse(user);
     }
 
@@ -99,6 +100,8 @@ public class AuthService {
             newUser.setName(name);
             newUser.setProvider("GOOGLE");
             newUser.setRole(Role.USER);
+          
+            preferencesService.setDefaultPreferences(newUser);
             return userRepository.save(newUser);
         });
 
@@ -107,7 +110,12 @@ public class AuthService {
 
     private AuthResponseDTO buildAuthResponse(User user) {
         String token = jwtService.generateToken(user);
-        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole().name(), user.getStartDt());
+      
+        Preferences preferences = preferencesRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preferences not found for user " + user.getId()));
+      
+        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole().name(), user.getStartDt(), preferences);
+      
         return new AuthResponseDTO(token, userDto);
     }
 }
