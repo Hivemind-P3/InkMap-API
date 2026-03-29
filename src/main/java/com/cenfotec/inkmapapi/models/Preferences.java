@@ -31,7 +31,7 @@ public class Preferences {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "id_codigoColor")
     private ColorCode colorCode;
 
