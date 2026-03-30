@@ -3,6 +3,7 @@ package com.cenfotec.inkmapapi.service;
 import com.cenfotec.inkmapapi.dto.CreateStoryCharacterRequestDTO;
 import com.cenfotec.inkmapapi.dto.PagedStoryCharacterResponseDTO;
 import com.cenfotec.inkmapapi.dto.StoryCharacterResponseDTO;
+import com.cenfotec.inkmapapi.dto.UpdateStoryCharacterRequestDTO;
 import com.cenfotec.inkmapapi.models.Project;
 import com.cenfotec.inkmapapi.models.StoryCharacter;
 import com.cenfotec.inkmapapi.models.User;
@@ -128,7 +129,64 @@ public class StoryCharacterService {
         return project;
     }
 
+    /**
+     * Updates an existing character within a project owned by the authenticated user.
+     *
+     * @param email       email extracted from the JWT subject
+     * @param projectId   ID of the project
+     * @param characterId ID of the character to update
+     * @param request     updated character data
+     * @return updated character DTO
+     */
+    public StoryCharacterResponseDTO updateCharacter(String email, Long projectId,
+                                                     Long characterId,
+                                                     UpdateStoryCharacterRequestDTO request) {
+        validateUpdateRequest(request);
+
+        Project project = resolveProject(email, projectId);
+
+        StoryCharacter character = storyCharacterRepository.findByIdAndProject(characterId, project)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Character not found"));
+
+        character.setName(request.getName().trim());
+        character.setRole(request.getRole());
+        character.setDescription(request.getDescription());
+        character.setAge(request.getAge());
+        character.setGender(request.getGender());
+        character.setRace(request.getRace());
+
+        return toDTO(storyCharacterRepository.save(character));
+    }
+
+    /**
+     * Deletes a character within a project owned by the authenticated user.
+     *
+     * @param email       email extracted from the JWT subject
+     * @param projectId   ID of the project
+     * @param characterId ID of the character to delete
+     */
+    public void deleteCharacter(String email, Long projectId, Long characterId) {
+        Project project = resolveProject(email, projectId);
+
+        StoryCharacter character = storyCharacterRepository.findByIdAndProject(characterId, project)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Character not found"));
+
+        storyCharacterRepository.delete(character);
+    }
+
     private void validateCreateRequest(CreateStoryCharacterRequestDTO request) {
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
+        }
+        if (request.getGender() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Gender is required");
+        }
+        if (request.getAge() != null && request.getAge() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Age must be 0 or greater");
+        }
+    }
+
+    private void validateUpdateRequest(UpdateStoryCharacterRequestDTO request) {
         if (request.getName() == null || request.getName().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Name is required");
         }
