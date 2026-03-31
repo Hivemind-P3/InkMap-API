@@ -3,6 +3,7 @@ package com.cenfotec.inkmapapi.controller;
 import com.cenfotec.inkmapapi.dto.CreateStoryCharacterRequestDTO;
 import com.cenfotec.inkmapapi.dto.PagedStoryCharacterResponseDTO;
 import com.cenfotec.inkmapapi.dto.StoryCharacterResponseDTO;
+import com.cenfotec.inkmapapi.dto.UpdateStoryCharacterRequestDTO;
 import com.cenfotec.inkmapapi.service.StoryCharacterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -73,5 +74,25 @@ public class StoryCharacterController {
             @PathVariable Long characterId) {
         String email = authentication.getName();
         return ResponseEntity.ok(storyCharacterService.getCharacterById(email, projectId, characterId));
+    }
+
+    @PutMapping("/{characterId}")
+    public ResponseEntity<StoryCharacterResponseDTO> updateCharacter(
+            Authentication authentication,
+            @PathVariable Long projectId,
+            @PathVariable Long characterId,
+            @RequestBody UpdateStoryCharacterRequestDTO request) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(storyCharacterService.updateCharacter(email, projectId, characterId, request));
+    }
+
+    @DeleteMapping("/{characterId}")
+    public ResponseEntity<Void> deleteCharacter(
+            Authentication authentication,
+            @PathVariable Long projectId,
+            @PathVariable Long characterId) {
+        String email = authentication.getName();
+        storyCharacterService.deleteCharacter(email, projectId, characterId);
+        return ResponseEntity.noContent().build();
     }
 }
