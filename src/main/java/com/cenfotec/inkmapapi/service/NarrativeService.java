@@ -30,7 +30,7 @@ public class NarrativeService {
         narrative.setCreationTime(LocalDateTime.now());
         narrative.setUpdateTime(LocalDateTime.now());
 
-        int order = repository.findByProjectIdProjectOrderByAsc(dto.getProjectId()).size();
+        int order = repository.findAllByProject_IdOrderByIdAsc(dto.getProjectId()).size();
         narrative.setOrder(order);
 
         repository.save(narrative);
@@ -41,7 +41,7 @@ public class NarrativeService {
     public NarrativeResponseDTO edit(Long narrativeId, UpdateNarrativeDTO dto, Long userId) {
 
         Narrative narrative = repository
-                .findByIdAndProjectIdProject(narrativeId, dto.getProjectId())
+                .findByIdAndProject_Id(narrativeId, dto.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Narrative content not found"));
 
         if (dto.getTitle() != null) {
@@ -65,7 +65,7 @@ public class NarrativeService {
 
     public List<NarrativeResponseDTO> listByProject(Long projectId) {
 
-        return repository.findByProjectIdProjectOrderByAsc(projectId)
+        return repository.findAllByProject_IdOrderByIdAsc(projectId)
                 .stream()
                 .map(this::mapToDTO)
                 .toList();
@@ -74,7 +74,7 @@ public class NarrativeService {
     public List<NarrativeResponseDTO> reorder(NarrativeOrderDTO dto, Long userId) {
 
         List<Narrative> narratives =
-                repository.findByProjectIdProjectOrderByAsc(dto.getProjectId());
+                repository.findAllByProject_IdOrderByIdAsc(dto.getProjectId());
 
         Map<Long, Narrative> map = narratives.stream()
                 .collect(Collectors.toMap(Narrative::getId, c -> c));

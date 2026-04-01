@@ -2,6 +2,8 @@ package com.cenfotec.inkmapapi.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -34,5 +36,6 @@ public class Narrative {
 
     @ManyToOne
     @JoinColumn(name = "id_proyecto", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Project project;
 }

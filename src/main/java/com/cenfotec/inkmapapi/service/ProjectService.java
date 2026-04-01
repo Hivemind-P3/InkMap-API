@@ -12,6 +12,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -24,6 +26,28 @@ public class ProjectService {
     public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+    }
+
+    public ResponseEntity<?> getProjectById(Long id, Authentication authentication) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project with id " + id + " not found"));
+
+        String requestingUserEmail = authentication.getName();
+
+        if (!project.getUser().getEmail().equals(requestingUserEmail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not the owner of this project");
+        }
+
+        ProjectResponseDTO response = new ProjectResponseDTO(
+                project.getId(),
+                project.getTitle(),
+                project.getDescription(),
+                project.getMedium(),
+                project.getTags(),
+                project.getCreatedAt()
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     /**
