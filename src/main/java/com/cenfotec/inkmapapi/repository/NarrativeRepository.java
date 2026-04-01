@@ -10,7 +10,7 @@ import java.util.Optional;
 @Repository
 public interface NarrativeRepository extends JpaRepository<Narrative, Long> {
 
-    List<Narrative> findByProjectIdProjectOrderByAsc(Long projectId);
+    List<Narrative> findAllByProject_IdOrderByIdAsc(Long projectId);
 
-    Optional<Narrative> findByIdAndProjectIdProject(Long id, Long projectId);
+    Optional<Narrative> findByIdAndProject_Id(Long id, Long projectId);
 }
