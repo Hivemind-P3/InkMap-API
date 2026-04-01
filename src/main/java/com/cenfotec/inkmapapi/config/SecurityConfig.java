@@ -47,7 +47,7 @@ public class SecurityConfig {
                 .map(user -> org.springframework.security.core.userdetails.User.builder()
                         .username(user.getEmail())
                         .password(user.getPassword() != null ? user.getPassword() : "")
-                        .roles("USER")
+                        .authorities("ROLE_" + user.getRole().name())
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
@@ -76,7 +76,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         config.setAllowCredentials(true);
 
