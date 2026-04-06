@@ -1,5 +1,6 @@
 package com.cenfotec.inkmapapi.models;
 
+import com.cenfotec.inkmapapi.models.enums.NodeType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,13 @@ public class Node {
 
     @Column(name = "descripcion", columnDefinition = "TEXT")
     private String description;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo")
+    private NodeType type;
+
+    @Column(name = "color")
+    private String color;
 
     @Column(name = "pos_x")
     private Double posX;

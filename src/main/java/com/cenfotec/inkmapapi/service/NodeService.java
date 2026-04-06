@@ -53,6 +53,8 @@ public class NodeService {
         Node node = new Node();
         node.setLabel(request.getLabel().trim());
         node.setDescription(request.getDescription());
+        node.setType(request.getType());
+        node.setColor(request.getColor().trim());
         node.setPosX(request.getPosX());
         node.setPosY(request.getPosY());
         node.setNodeMap(nodeMap);
@@ -125,6 +127,8 @@ public class NodeService {
 
         node.setLabel(request.getLabel().trim());
         node.setDescription(request.getDescription());
+        node.setType(request.getType());
+        node.setColor(request.getColor().trim());
         node.setPosX(request.getPosX());
         node.setPosY(request.getPosY());
 
@@ -175,6 +179,12 @@ public class NodeService {
         if (request.getLabel() == null || request.getLabel().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Label is required");
         }
+        if (request.getType() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type is required");
+        }
+        if (request.getColor() == null || request.getColor().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Color is required");
+        }
         if (request.getPosX() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "posX is required");
         }
@@ -186,6 +196,12 @@ public class NodeService {
     private void validateUpdateRequest(UpdateNodeRequestDTO request) {
         if (request.getLabel() == null || request.getLabel().isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Label is required");
+        }
+        if (request.getType() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Type is required");
+        }
+        if (request.getColor() == null || request.getColor().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Color is required");
         }
         if (request.getPosX() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "posX is required");
@@ -200,6 +216,8 @@ public class NodeService {
                 node.getId(),
                 node.getLabel(),
                 node.getDescription(),
+                node.getType(),
+                node.getColor(),
                 node.getPosX(),
                 node.getPosY(),
                 node.getNodeMap().getId()
