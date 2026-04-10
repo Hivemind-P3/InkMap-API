@@ -22,10 +22,12 @@ public class NodeRelation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nodo_origen_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Node sourceNode;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nodo_destino_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Node targetNode;
 
     @ManyToOne(fetch = FetchType.LAZY)
