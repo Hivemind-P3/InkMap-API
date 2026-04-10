@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "nodos")
@@ -36,6 +39,10 @@ public class Node {
 
     @Column(name = "pos_y")
     private Double posY;
+
+    @UpdateTimestamp
+    @Column(name = "fecha_actualizacion")
+    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mapa_nodos_id")

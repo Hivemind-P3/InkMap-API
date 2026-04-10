@@ -9,6 +9,7 @@ import com.cenfotec.inkmapapi.models.NodeMap;
 import com.cenfotec.inkmapapi.models.Project;
 import com.cenfotec.inkmapapi.models.User;
 import com.cenfotec.inkmapapi.repository.NodeMapRepository;
+import com.cenfotec.inkmapapi.repository.NodeRelationRepository;
 import com.cenfotec.inkmapapi.repository.NodeRepository;
 import com.cenfotec.inkmapapi.repository.ProjectRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -25,15 +27,18 @@ public class NodeService {
     private final NodeMapRepository nodeMapRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final NodeRelationRepository nodeRelationRepository;
 
     public NodeService(NodeRepository nodeRepository,
                        NodeMapRepository nodeMapRepository,
                        ProjectRepository projectRepository,
-                       UserRepository userRepository) {
+                       UserRepository userRepository,
+                       NodeRelationRepository nodeRelationRepository) {
         this.nodeRepository = nodeRepository;
         this.nodeMapRepository = nodeMapRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.nodeRelationRepository = nodeRelationRepository;
     }
 
     /**
@@ -143,12 +148,15 @@ public class NodeService {
      * @param nodeMapId ID of the node map
      * @param nodeId    ID of the node to delete
      */
+
+    @Transactional
     public void deleteNode(String email, Long projectId, Long nodeMapId, Long nodeId) {
         NodeMap nodeMap = resolveNodeMap(email, projectId, nodeMapId);
 
         Node node = nodeRepository.findByIdAndNodeMap(nodeId, nodeMap)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Node not found"));
 
+        nodeRelationRepository.deleteBySourceNodeOrTargetNode(node, node);
         nodeRepository.delete(node);
     }
 
@@ -220,7 +228,8 @@ public class NodeService {
                 node.getColor(),
                 node.getPosX(),
                 node.getPosY(),
-                node.getNodeMap().getId()
+                node.getNodeMap().getId(),
+                node.getUpdatedAt()
         );
     }
 }

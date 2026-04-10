@@ -4,6 +4,8 @@ import com.cenfotec.inkmapapi.models.enums.NodeType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor
 public class NodeResponseDTO {
@@ -16,4 +18,5 @@ public class NodeResponseDTO {
     private Double posX;
     private Double posY;
     private Long nodeMapId;
+    private LocalDateTime updatedAt;
 }
