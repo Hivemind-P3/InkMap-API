@@ -1,5 +1,7 @@
 package com.cenfotec.inkmapapi.service;
 
+import com.cenfotec.inkmapapi.dto.GeographicMapDTO;
+import com.cenfotec.inkmapapi.dto.GeographicMapSaveDTO;
 import com.cenfotec.inkmapapi.models.GeographicMap;
 import com.cenfotec.inkmapapi.models.Project;
 import com.cenfotec.inkmapapi.repository.GeographicMapRepository;
@@ -29,35 +31,56 @@ public class GeographicMapService {
         GeographicMap geographicMap = geographicMapRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Geographic map with id " + id + " not found"));
 
-        return ResponseEntity.ok(geographicMap);
+        GeographicMapDTO dto = new GeographicMapDTO();
+        dto.setId(geographicMap.getId());
+        dto.setName(geographicMap.getName());
+        dto.setKonvaJson(geographicMap.getKonvaJson());
+        dto.setThumbnail(geographicMap.getThumbnail());
+        dto.setProjectId(geographicMap.getProject().getId());
+        dto.setCreatedAt(geographicMap.getCreatedAt());
+        dto.setUpdatedAt(geographicMap.getUpdatedAt());
+
+        return ResponseEntity.ok(dto);
     }
 
     public ResponseEntity<?> getAllGeographicalMapsByProjectId(int page, int size, Long projectId) {
         Pageable pageable = PageRequest.of(page, size);
         Page<GeographicMap> geographicMaps = geographicMapRepository.findAllByProjectId(projectId, pageable);
 
-        return ResponseEntity.ok(geographicMaps);
+        Page<GeographicMapDTO> dtos = geographicMaps.map(map -> {
+            GeographicMapDTO dto = new GeographicMapDTO();
+            dto.setId(map.getId());
+            dto.setName(map.getName());
+            dto.setProjectId(map.getProject().getId());
+            dto.setThumbnail(map.getThumbnail());
+            dto.setCreatedAt(map.getCreatedAt());
+            dto.setUpdatedAt(map.getUpdatedAt());
+            return dto;
+        });
+
+        return ResponseEntity.ok(dtos);
     }
 
-    public ResponseEntity<?> createGeographicMap(Long projectId, GeographicMap geographicMap) {
-        Optional<Project> project = projectRepository.findById(projectId);
-        if (project.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project with id " + projectId + " not found");
-        }
-
-        GeographicMap newGeographicMap = new GeographicMap();
-        newGeographicMap.setName(geographicMap.getName());
-        newGeographicMap.setKonvaJson(geographicMap.getKonvaJson());
-        newGeographicMap.setProject(geographicMap.getProject());
-
-        return ResponseEntity.ok(geographicMapRepository.save(newGeographicMap));
-    }
-
-    public ResponseEntity<?> deleteGeographicMap(Long id) {
-        geographicMapRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Geographic map with id " + id + " not found"));
-
-        geographicMapRepository.deleteById(id);
+    public ResponseEntity<?> saveMap(Long id, GeographicMapSaveDTO dto) {
+        GeographicMap map = geographicMapRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Map not found"));
+        map.setKonvaJson(dto.getKonvaJson());
+        map.setName(dto.getName());
+        map.setThumbnail(dto.getThumbnail());
+        geographicMapRepository.save(map);
         return ResponseEntity.ok().build();
+    }
+
+    public ResponseEntity<?> createMap(Long projectId, GeographicMapSaveDTO dto) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        GeographicMap map = new GeographicMap();
+        map.setName(dto.getName());
+        map.setProject(project);
+        map.setKonvaJson("");
+        geographicMapRepository.save(map);
+
+        return ResponseEntity.ok(map.getId());
     }
 }
