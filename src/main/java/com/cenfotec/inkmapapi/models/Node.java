@@ -9,6 +9,8 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "nodos")
@@ -48,4 +50,12 @@ public class Node {
     @JoinColumn(name = "mapa_nodos_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private NodeMap nodeMap;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "nodo_wikis",
+            joinColumns = @JoinColumn(name = "nodo_id"),
+            inverseJoinColumns = @JoinColumn(name = "wiki_id")
+    )
+    private Set<Wiki> wikis = new HashSet<>();
 }
