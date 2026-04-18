@@ -9,6 +9,8 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "puntosDeInteres")
@@ -31,6 +33,14 @@ public class PointOfInterest {
     @JoinColumn(name = "mapaGeografico_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private GeographicMap geographicMap;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "puntoDeInteres_wikis",
+            joinColumns = @JoinColumn(name = "puntoDeInteres_id"),
+            inverseJoinColumns = @JoinColumn(name = "wiki_id")
+    )
+    private Set<Wiki> wikis = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
