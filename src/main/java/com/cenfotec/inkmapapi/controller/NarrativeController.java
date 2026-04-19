@@ -5,6 +5,7 @@ import com.cenfotec.inkmapapi.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -17,15 +18,17 @@ public class NarrativeController {
 
     @PostMapping
     public ResponseEntity<?> crear(@RequestBody CreateNarrativeDTO dto,
-                                   @RequestAttribute("idUsuario") Long idUsuario) {
-        return ResponseEntity.ok(service.create(dto, idUsuario));
+                                   Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(service.create(dto, username));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> editar(@PathVariable Long id,
                                     @RequestBody UpdateNarrativeDTO dto,
-                                    @RequestAttribute("idUsuario") Long idUsuario) {
-        return ResponseEntity.ok(service.edit(id, dto, idUsuario));
+                                    Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(service.edit(id, dto, username));
     }
 
     @GetMapping("/projects/{idProyecto}")
@@ -35,7 +38,8 @@ public class NarrativeController {
 
     @PutMapping("/order")
     public ResponseEntity<?> reordenar(@RequestBody NarrativeOrderDTO dto,
-                                       @RequestAttribute("idUsuario") Long idUsuario) {
-        return ResponseEntity.ok(service.reorder(dto, idUsuario));
+                                       Authentication authentication) {
+        String username = authentication.getName();
+        return ResponseEntity.ok(service.reorder(dto, username));
     }
 }

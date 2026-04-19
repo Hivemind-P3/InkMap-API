@@ -18,7 +18,7 @@ public class NarrativeService {
     private final NarrativeRepository repository;
     private final ProjectRepository projectRepository;
 
-    public NarrativeResponseDTO create(CreateNarrativeDTO dto, Long userId) {
+    public NarrativeResponseDTO create(CreateNarrativeDTO dto, String username) {
 
         Project project = projectRepository.findById(dto.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -38,7 +38,7 @@ public class NarrativeService {
         return mapToDTO(narrative);
     }
 
-    public NarrativeResponseDTO edit(Long narrativeId, UpdateNarrativeDTO dto, Long userId) {
+    public NarrativeResponseDTO edit(Long narrativeId, UpdateNarrativeDTO dto, String username) {
 
         Narrative narrative = repository
                 .findByIdAndProject_Id(narrativeId, dto.getProjectId())
@@ -71,7 +71,7 @@ public class NarrativeService {
                 .toList();
     }
 
-    public List<NarrativeResponseDTO> reorder(NarrativeOrderDTO dto, Long userId) {
+    public List<NarrativeResponseDTO> reorder(NarrativeOrderDTO dto, String username) {
 
         List<Narrative> narratives =
                 repository.findAllByProject_IdOrderByIdAsc(dto.getProjectId());
