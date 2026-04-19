@@ -55,7 +55,7 @@ public class NarrativeService {
             narrative.setTitle(dto.getTitle());
         }
 
-        if (dto.getContent() == null || dto.getContent().isEmpty()) {
+        if (isEffectivelyEmpty(dto.getContent())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Narrative content cannot be empty");
         }
 
@@ -104,6 +104,15 @@ public class NarrativeService {
                 .map(map::get)
                 .map(this::mapToDTO)
                 .toList();
+    }
+
+    private boolean isEffectivelyEmpty(String content) {
+        if (content == null || content.isBlank()) return true;
+        String c = content.strip().replaceAll("\\s+", "").replace("\\n", "");
+        if (c.equals("{}")) return true;
+        if (c.equals("{\"ops\":[]}")) return true;
+        if (c.equals("{\"ops\":[{\"insert\":\"\"}]}")) return true;
+        return false;
     }
 
     private NarrativeResponseDTO mapToDTO(Narrative c) {

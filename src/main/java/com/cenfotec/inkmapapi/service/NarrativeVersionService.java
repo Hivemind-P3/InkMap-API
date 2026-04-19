@@ -9,7 +9,6 @@ import com.cenfotec.inkmapapi.repository.NarrativeRepository;
 import com.cenfotec.inkmapapi.repository.NarrativeVersionRepository;
 import com.cenfotec.inkmapapi.repository.ProjectRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
-
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -33,7 +32,7 @@ public class NarrativeVersionService {
         Narrative narrative = narrativeRepository.findByIdAndProject_Id(narrativeId, projectId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Narrative not found"));
 
-        if (narrative.getContent() == null || narrative.getContent().isEmpty()) {
+        if (isEffectivelyEmpty(narrative.getContent())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Narrative content cannot be empty");
         }
 
@@ -68,6 +67,16 @@ public class NarrativeVersionService {
         }
 
         return project;
+    }
+
+    private boolean isEffectivelyEmpty(String content) {
+        if (content == null || content.isBlank()) return true;
+        // replaceAll removes actual newline chars; replace removes the JSON-escaped \n sequence
+        String c = content.strip().replaceAll("\\s+", "").replace("\\n", "");
+        if (c.equals("{}")) return true;
+        if (c.equals("{\"ops\":[]}")) return true;
+        if (c.equals("{\"ops\":[{\"insert\":\"\"}]}")) return true;
+        return false;
     }
 
     private NarrativeVersionResponseDTO toDTO(NarrativeVersion v) {
