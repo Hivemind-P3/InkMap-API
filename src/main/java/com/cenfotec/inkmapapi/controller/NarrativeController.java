@@ -2,7 +2,6 @@ package com.cenfotec.inkmapapi.controller;
 
 import com.cenfotec.inkmapapi.dto.*;
 import com.cenfotec.inkmapapi.service.*;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/narratives")
 @RequiredArgsConstructor
-@Transactional
 public class NarrativeController {
 
     private final NarrativeService service;
@@ -32,7 +30,8 @@ public class NarrativeController {
     }
 
     @GetMapping("/projects/{idProyecto}")
-    public ResponseEntity<?> listar(@PathVariable Long idProyecto) {
+    public ResponseEntity<?> listar(@PathVariable Long idProyecto,
+                                    Authentication authentication) {
         return ResponseEntity.ok(service.listByProject(idProyecto));
     }
 
