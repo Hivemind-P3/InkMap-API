@@ -46,6 +46,9 @@ public class User implements UserDetails {
     @Column(name = "rol")
     private Role role;
 
+    @Column(name = "bloqueado", nullable = false)
+    private boolean blocked = false;
+
     @CreationTimestamp
     private LocalDateTime startDt;
 
