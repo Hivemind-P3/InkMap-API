@@ -1,5 +1,6 @@
 package com.cenfotec.inkmapapi.controller;
 
+import com.cenfotec.inkmapapi.dto.NarrativeResponseDTO;
 import com.cenfotec.inkmapapi.dto.NarrativeVersionResponseDTO;
 import com.cenfotec.inkmapapi.service.NarrativeVersionService;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,15 @@ public class NarrativeVersionController {
             Authentication authentication) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(service.createVersion(authentication.getName(), projectId, narrativeId));
+    }
+
+    @PostMapping("/{versionId}/restore")
+    public ResponseEntity<NarrativeResponseDTO> restoreVersion(
+            @PathVariable Long projectId,
+            @PathVariable Long narrativeId,
+            @PathVariable Long versionId,
+            Authentication authentication) {
+        return ResponseEntity.ok(service.restoreVersion(authentication.getName(), projectId, narrativeId, versionId));
     }
 
     @GetMapping

@@ -1,5 +1,6 @@
 package com.cenfotec.inkmapapi.service;
 
+import com.cenfotec.inkmapapi.dto.NarrativeResponseDTO;
 import com.cenfotec.inkmapapi.dto.NarrativeVersionResponseDTO;
 import com.cenfotec.inkmapapi.models.Narrative;
 import com.cenfotec.inkmapapi.models.NarrativeVersion;
@@ -9,6 +10,7 @@ import com.cenfotec.inkmapapi.repository.NarrativeRepository;
 import com.cenfotec.inkmapapi.repository.NarrativeVersionRepository;
 import com.cenfotec.inkmapapi.repository.ProjectRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -53,6 +55,26 @@ public class NarrativeVersionService {
                 .stream()
                 .map(this::toDTO)
                 .toList();
+    }
+
+    public NarrativeResponseDTO restoreVersion(String email, Long projectId, Long narrativeId, Long versionId) {
+        resolveProject(email, projectId);
+
+        Narrative narrative = narrativeRepository.findByIdAndProject_Id(narrativeId, projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Narrative not found"));
+
+        NarrativeVersion version = versionRepository.findById(versionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Version not found"));
+
+        if (!version.getNarrative().getId().equals(narrativeId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Version does not belong to this narrative");
+        }
+
+        narrative.setContent(version.getContent());
+        narrative.setUpdateTime(LocalDateTime.now());
+
+        Narrative saved = narrativeRepository.save(narrative);
+        return new NarrativeResponseDTO(saved.getId(), saved.getTitle(), saved.getContent(), saved.getOrder());
     }
 
     private Project resolveProject(String email, Long projectId) {
