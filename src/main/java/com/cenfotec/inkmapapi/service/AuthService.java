@@ -77,6 +77,10 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
         }
 
+        if (user.isBlocked()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been blocked. Please contact an admin");
+        }
+
         return buildAuthResponse(user);
     }
 
@@ -107,6 +111,10 @@ public class AuthService {
             return newUser;
         });
 
+        if (user.isBlocked()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Your account has been blocked. Please contact an admin");
+        }
+
         return buildAuthResponse(user);
     }
 
@@ -116,7 +124,7 @@ public class AuthService {
         Preferences preferences = preferencesRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Preferences not found for user " + user.getId()));
       
-        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole().name(), user.getStartDt(), preferences);
+        UserResponseDTO userDto = new UserResponseDTO(user.getId(), user.getName(), user.getEmail(), user.getProvider(), user.getRole().name(), user.isBlocked(), user.getStartDt(), preferences);
       
         return new AuthResponseDTO(token, userDto);
     }

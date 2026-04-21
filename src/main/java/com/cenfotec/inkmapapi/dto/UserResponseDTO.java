@@ -16,6 +16,7 @@ public class UserResponseDTO {
     private String email;
     private String provider;
     private String role;
+    private boolean blocked;
     private LocalDateTime startDt;
     private Preferences preferences;
 }

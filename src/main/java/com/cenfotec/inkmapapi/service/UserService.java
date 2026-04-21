@@ -9,6 +9,10 @@ import com.cenfotec.inkmapapi.repository.ColorCodeRepository;
 import com.cenfotec.inkmapapi.repository.PreferencesRepository;
 import com.cenfotec.inkmapapi.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -75,10 +79,12 @@ public class UserService {
         return ResponseEntity.ok(savedUser);
     }
 
-    public List<UserResponseDTO> listUsers() {
-        return userRepository.findAll().stream()
-                .map(this::toDTO)
-                .toList();
+    public Page<UserResponseDTO> listUsers(int page, int size, String search) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startDt").descending());
+        Page<User> users = (search != null && !search.isBlank())
+                ? userRepository.findByNameContainingIgnoreCaseOrEmailContainingIgnoreCase(search, search, pageable)
+                : userRepository.findAll(pageable);
+        return users.map(this::toDTO);
     }
 
     public UserResponseDTO updateRole(Long userId, String role, String currentUserEmail) {
@@ -102,6 +108,13 @@ public class UserService {
         targetUser.setRole(newRole);
         userRepository.save(targetUser);
         return toDTO(targetUser);
+    }
+
+    public void setBlocked(Long userId, boolean blocked) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found: " + userId));
+        user.setBlocked(blocked);
+        userRepository.save(user);
     }
 
     public void deleteUser(Long userId, String currentUserEmail) {
@@ -129,6 +142,7 @@ public class UserService {
                 user.getEmail(),
                 user.getProvider(),
                 user.getRole().name(),
+                user.isBlocked(),
                 user.getStartDt(),
                 preferences
         );
