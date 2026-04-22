@@ -14,6 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/projects/{projectId}/characters")
 public class StoryCharacterController {
@@ -38,6 +40,16 @@ public class StoryCharacterController {
      * @param request        character data (name, role, description, age, gender, race)
      * @return 201 Created with the new character
      */
+    @PostMapping("/suggestions")
+    public ResponseEntity<List<CreateStoryCharacterRequestDTO>> suggestCharacters(
+            Authentication authentication,
+            @PathVariable Long projectId,
+            @RequestBody GenerateCharacterRequestDTO request) {
+        String email = authentication.getName();
+        String context = projectContextService.buildContext(email, projectId);
+        return ResponseEntity.ok(groqCharacterService.generateSuggestions(context, request.getInstructions()));
+    }
+
     @PostMapping("/generate")
     public ResponseEntity<CreateStoryCharacterRequestDTO> generateCharacter(
             Authentication authentication,

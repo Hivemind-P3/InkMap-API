@@ -87,6 +87,91 @@ public class GroqCharacterService {
                 """.formatted(context);
     }
 
+    public List<CreateStoryCharacterRequestDTO> generateSuggestions(String context, String instructions) {
+        String userMessage = (instructions == null || instructions.isBlank())
+                ? "Sin instrucciones adicionales. Sugiere personajes que enriquezcan la historia basándote en el contexto."
+                : instructions;
+
+        Map<String, Object> requestBody = Map.of(
+                "model", model,
+                "messages", List.of(
+                        Map.of("role", "system", "content", buildSuggestionsPrompt(context)),
+                        Map.of("role", "user", "content", userMessage)
+                ),
+                "response_format", Map.of("type", "json_object"),
+                "temperature", 0.9,
+                "max_tokens", 1024
+        );
+
+        try {
+            String responseBody = restClient.post()
+                    .uri(GROQ_URL)
+                    .header("Authorization", "Bearer " + apiKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(String.class);
+
+            return parseSuggestionsResponse(responseBody);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "AI service unavailable");
+        }
+    }
+
+    private String buildSuggestionsPrompt(String context) {
+        return """
+                Eres un asistente de escritura creativa especializado en generar personajes de ficción.
+
+                CONTEXTO DEL PROYECTO:
+                %s
+
+                Genera exactamente 3 sugerencias de personajes distintos y coherentes con el universo narrativo del proyecto.
+                No repitas nombres de personajes existentes.
+                Si el contexto es pobre o genérico, crea personajes variados e interesantes basándote en las instrucciones del usuario.
+
+                Devuelve ÚNICAMENTE este JSON:
+                {"suggestions": [<personaje1>, <personaje2>, <personaje3>]}
+
+                Cada personaje debe tener:
+                - name (string, requerido): nombre del personaje
+                - role (string): rol narrativo del personaje
+                - description (string): descripción del personaje
+                - age (integer o null): edad del personaje
+                - gender (string, requerido): exactamente "MALE", "FEMALE" o "OTHER"
+                - race (string): raza o especie del personaje
+
+                No incluyas texto fuera del JSON.
+                """.formatted(context);
+    }
+
+    private List<CreateStoryCharacterRequestDTO> parseSuggestionsResponse(String responseBody) {
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            String content = root.path("choices").get(0).path("message").path("content").asText();
+            JsonNode body = objectMapper.readTree(content);
+
+            JsonNode suggestions = body.path("suggestions");
+            if (suggestions.isMissingNode() || !suggestions.isArray() || suggestions.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "AI response did not return a suggestions array");
+            }
+
+            List<CreateStoryCharacterRequestDTO> result = new java.util.ArrayList<>();
+            for (JsonNode node : suggestions) {
+                result.add(parseCharacterNode(node));
+            }
+            return result;
+
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Could not parse AI suggestions response");
+        }
+    }
+
     private CreateStoryCharacterRequestDTO parseResponse(String responseBody) {
         try {
             JsonNode root = objectMapper.readTree(responseBody);
@@ -98,37 +183,7 @@ public class GroqCharacterService {
                 throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, errorMsg);
             }
 
-            String name = character.path("name").asText(null);
-            String genderStr = character.path("gender").asText(null);
-
-            if (name == null || name.isBlank()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "AI response missing required field: name");
-            }
-            if (genderStr == null || genderStr.isBlank()) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "AI response missing required field: gender");
-            }
-
-            Gender gender;
-            try {
-                gender = Gender.valueOf(genderStr.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
-                        "AI response contains invalid gender value: " + genderStr);
-            }
-
-            JsonNode ageNode = character.path("age");
-            Integer age = (ageNode.isMissingNode() || ageNode.isNull()) ? null : ageNode.asInt();
-
-            CreateStoryCharacterRequestDTO dto = new CreateStoryCharacterRequestDTO();
-            dto.setName(name.trim());
-            dto.setRole(character.path("role").asText(null));
-            dto.setDescription(character.path("description").asText(null));
-            dto.setAge(age);
-            dto.setGender(gender);
-            dto.setRace(character.path("race").asText(null));
-            return dto;
+            return parseCharacterNode(character);
 
         } catch (ResponseStatusException e) {
             throw e;
@@ -136,5 +191,39 @@ public class GroqCharacterService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Could not parse AI response");
         }
+    }
+
+    private CreateStoryCharacterRequestDTO parseCharacterNode(JsonNode character) {
+        String name = character.path("name").asText(null);
+        String genderStr = character.path("gender").asText(null);
+
+        if (name == null || name.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "AI response missing required field: name");
+        }
+        if (genderStr == null || genderStr.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "AI response missing required field: gender");
+        }
+
+        Gender gender;
+        try {
+            gender = Gender.valueOf(genderStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "AI response contains invalid gender value: " + genderStr);
+        }
+
+        JsonNode ageNode = character.path("age");
+        Integer age = (ageNode.isMissingNode() || ageNode.isNull()) ? null : ageNode.asInt();
+
+        CreateStoryCharacterRequestDTO dto = new CreateStoryCharacterRequestDTO();
+        dto.setName(name.trim());
+        dto.setRole(character.path("role").asText(null));
+        dto.setDescription(character.path("description").asText(null));
+        dto.setAge(age);
+        dto.setGender(gender);
+        dto.setRace(character.path("race").asText(null));
+        return dto;
     }
 }
