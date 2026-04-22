@@ -1,6 +1,7 @@
 package com.cenfotec.inkmapapi.service;
 
 import com.cenfotec.inkmapapi.dto.NarrativeResponseDTO;
+import com.cenfotec.inkmapapi.dto.NarrativeVersionCompareResponseDTO;
 import com.cenfotec.inkmapapi.dto.NarrativeVersionResponseDTO;
 import com.cenfotec.inkmapapi.models.Narrative;
 import com.cenfotec.inkmapapi.models.NarrativeVersion;
@@ -75,6 +76,40 @@ public class NarrativeVersionService {
 
         Narrative saved = narrativeRepository.save(narrative);
         return new NarrativeResponseDTO(saved.getId(), saved.getTitle(), saved.getContent(), saved.getOrder());
+    }
+
+    public NarrativeVersionCompareResponseDTO compareVersions(String email, Long projectId, Long narrativeId, Long versionAId, Long versionBId) {
+        resolveProject(email, projectId);
+
+        narrativeRepository.findByIdAndProject_Id(narrativeId, projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Narrative not found"));
+
+        if (versionAId.equals(versionBId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Versions must be different");
+        }
+
+        NarrativeVersion versionA = versionRepository.findById(versionAId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Version A not found"));
+
+        NarrativeVersion versionB = versionRepository.findById(versionBId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Version B not found"));
+
+        if (!versionA.getNarrative().getId().equals(narrativeId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Version A does not belong to this narrative");
+        }
+
+        if (!versionB.getNarrative().getId().equals(narrativeId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Version B does not belong to this narrative");
+        }
+
+        return new NarrativeVersionCompareResponseDTO(
+                versionA.getId(),
+                versionB.getId(),
+                versionA.getContent(),
+                versionB.getContent(),
+                versionA.getCreatedAt(),
+                versionB.getCreatedAt()
+        );
     }
 
     private Project resolveProject(String email, Long projectId) {
