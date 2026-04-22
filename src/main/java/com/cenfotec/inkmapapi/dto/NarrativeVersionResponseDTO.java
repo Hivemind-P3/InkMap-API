@@ -14,4 +14,5 @@ public class NarrativeVersionResponseDTO {
     private Long narrativeId;
     private String content;
     private LocalDateTime createdAt;
+    private String author;
 }

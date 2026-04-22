@@ -39,8 +39,12 @@ public class NarrativeVersionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Narrative content cannot be empty");
         }
 
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+
         NarrativeVersion version = new NarrativeVersion();
         version.setContent(narrative.getContent());
+        version.setAuthor(user.getName());
         version.setNarrative(narrative);
 
         return toDTO(versionRepository.save(version));
@@ -141,7 +145,8 @@ public class NarrativeVersionService {
                 v.getId(),
                 v.getNarrative().getId(),
                 v.getContent(),
-                v.getCreatedAt()
+                v.getCreatedAt(),
+                v.getAuthor()
         );
     }
 }

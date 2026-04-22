@@ -28,6 +28,9 @@ public class NarrativeVersion {
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "autor", nullable = false)
+    private String author;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "narrativo_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
