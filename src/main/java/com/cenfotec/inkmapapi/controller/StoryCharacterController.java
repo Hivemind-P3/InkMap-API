@@ -1,23 +1,33 @@
 package com.cenfotec.inkmapapi.controller;
 
 import com.cenfotec.inkmapapi.dto.CreateStoryCharacterRequestDTO;
+import com.cenfotec.inkmapapi.dto.GenerateCharacterRequestDTO;
 import com.cenfotec.inkmapapi.dto.PagedStoryCharacterResponseDTO;
 import com.cenfotec.inkmapapi.dto.StoryCharacterResponseDTO;
 import com.cenfotec.inkmapapi.dto.UpdateStoryCharacterRequestDTO;
+import com.cenfotec.inkmapapi.service.GroqCharacterService;
+import com.cenfotec.inkmapapi.service.ProjectContextService;
 import com.cenfotec.inkmapapi.service.StoryCharacterService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/projects/{projectId}/characters")
 public class StoryCharacterController {
 
     private final StoryCharacterService storyCharacterService;
+    private final ProjectContextService projectContextService;
+    private final GroqCharacterService groqCharacterService;
 
-    public StoryCharacterController(StoryCharacterService storyCharacterService) {
+    public StoryCharacterController(StoryCharacterService storyCharacterService,
+                                    ProjectContextService projectContextService,
+                                    GroqCharacterService groqCharacterService) {
         this.storyCharacterService = storyCharacterService;
+        this.projectContextService = projectContextService;
+        this.groqCharacterService = groqCharacterService;
     }
 
     /**
@@ -28,6 +38,19 @@ public class StoryCharacterController {
      * @param request        character data (name, role, description, age, gender, race)
      * @return 201 Created with the new character
      */
+    @PostMapping("/generate")
+    public ResponseEntity<CreateStoryCharacterRequestDTO> generateCharacter(
+            Authentication authentication,
+            @PathVariable Long projectId,
+            @RequestBody GenerateCharacterRequestDTO request) {
+        if (request.getInstructions() == null || request.getInstructions().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Instructions are required");
+        }
+        String email = authentication.getName();
+        String context = projectContextService.buildContext(email, projectId);
+        return ResponseEntity.ok(groqCharacterService.generate(context, request.getInstructions()));
+    }
+
     @PostMapping
     public ResponseEntity<StoryCharacterResponseDTO> createCharacter(
             Authentication authentication,
