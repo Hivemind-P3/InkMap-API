@@ -41,4 +41,25 @@ public class NarrativeController {
         String username = authentication.getName();
         return ResponseEntity.ok(service.reorder(dto, username));
     }
+
+    @GetMapping("/projects/{idProyecto}/search")
+    public ResponseEntity<?> search(@PathVariable Long idProyecto,
+                                    @RequestParam String q,
+                                    Authentication authentication) {
+        return ResponseEntity.ok(service.search(idProyecto, q, authentication.getName()));
+    }
+
+    @PutMapping("/{narrativeId}/associations")
+    public ResponseEntity<?> updateAssociations(@PathVariable Long narrativeId,
+                                                @RequestBody NarrativeAssociationsRequestDTO request,
+                                                Authentication authentication) {
+        return ResponseEntity.ok(service.updateAssociations(narrativeId, request, authentication.getName()));
+    }
+
+    @GetMapping("/{narrativeId}/associations")
+    public ResponseEntity<?> getAssociations(@PathVariable Long narrativeId,
+                                             @RequestParam Long projectId,
+                                             Authentication authentication) {
+        return ResponseEntity.ok(service.getAssociations(narrativeId, projectId, authentication.getName()));
+    }
 }

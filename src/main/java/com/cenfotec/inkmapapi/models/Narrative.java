@@ -6,6 +6,8 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "contenido_narrativo")
@@ -38,4 +40,16 @@ public class Narrative {
     @JoinColumn(name = "id_proyecto", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Project project;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "contenido_personajes",
+            joinColumns = @JoinColumn(name = "contenido_id"),
+            inverseJoinColumns = @JoinColumn(name = "personaje_id"))
+    private Set<StoryCharacter> characters = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "contenido_wikis",
+            joinColumns = @JoinColumn(name = "contenido_id"),
+            inverseJoinColumns = @JoinColumn(name = "wiki_id"))
+    private Set<Wiki> places = new HashSet<>();
 }
