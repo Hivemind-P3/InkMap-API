@@ -41,4 +41,11 @@ public class NarrativeController {
         String username = authentication.getName();
         return ResponseEntity.ok(service.reorder(dto, username));
     }
+
+    @GetMapping("/projects/{idProyecto}/search")
+    public ResponseEntity<?> search(@PathVariable Long idProyecto,
+                                    @RequestParam String q,
+                                    Authentication authentication) {
+        return ResponseEntity.ok(service.search(idProyecto, q, authentication.getName()));
+    }
 }

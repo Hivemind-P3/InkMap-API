@@ -8,8 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -21,6 +24,8 @@ public class NarrativeService {
 
     private final NarrativeRepository repository;
     private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     public NarrativeResponseDTO create(CreateNarrativeDTO dto, String username) {
 
@@ -104,6 +109,68 @@ public class NarrativeService {
                 .map(map::get)
                 .map(this::mapToDTO)
                 .toList();
+    }
+
+    public List<NarrativeSearchResultDTO> search(Long projectId, String query, String email) {
+        if (query == null || query.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query cannot be empty");
+        }
+        if (query.trim().length() < 3) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must be at least 3 characters");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+
+        if (!project.getUser().getEmail().equals(user.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
+        }
+
+        String lowerQuery = query.toLowerCase();
+        List<NarrativeSearchResultDTO> results = new ArrayList<>();
+
+        for (Narrative narrative : repository.findAllByProject_IdOrderByOrderAscIdAsc(projectId)) {
+            String plainText = extractTextFromDelta(narrative.getContent());
+            boolean inTitle = narrative.getTitle().toLowerCase().contains(lowerQuery);
+            int contentIdx = plainText.toLowerCase().indexOf(lowerQuery);
+
+            if (!inTitle && contentIdx == -1) continue;
+
+            String snippet;
+            if (contentIdx != -1) {
+                int start = Math.max(0, contentIdx - 75);
+                int end = Math.min(plainText.length(), contentIdx + query.length() + 75);
+                snippet = (start > 0 ? "..." : "") + plainText.substring(start, end) + (end < plainText.length() ? "..." : "");
+            } else {
+                snippet = narrative.getTitle();
+            }
+
+            results.add(new NarrativeSearchResultDTO(narrative.getId(), narrative.getTitle(), snippet));
+        }
+
+        return results;
+    }
+
+    private String extractTextFromDelta(String deltaJson) {
+        if (deltaJson == null || deltaJson.isBlank()) return "";
+        try {
+            JsonNode root = objectMapper.readTree(deltaJson);
+            JsonNode ops = root.get("ops");
+            if (ops == null || !ops.isArray()) return "";
+            StringBuilder text = new StringBuilder();
+            for (JsonNode op : ops) {
+                JsonNode insert = op.get("insert");
+                if (insert != null && insert.isTextual()) {
+                    text.append(insert.asText());
+                }
+            }
+            return text.toString().trim();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     private boolean isEffectivelyEmpty(String content) {
