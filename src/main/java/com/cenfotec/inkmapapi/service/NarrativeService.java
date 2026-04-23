@@ -13,8 +13,10 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +27,8 @@ public class NarrativeService {
     private final NarrativeRepository repository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final StoryCharacterRepository storyCharacterRepository;
+    private final WikiRepository wikiRepository;
     private final ObjectMapper objectMapper;
 
     public NarrativeResponseDTO create(CreateNarrativeDTO dto, String username) {
@@ -171,6 +175,71 @@ public class NarrativeService {
         } catch (Exception e) {
             return "";
         }
+    }
+
+    public NarrativeAssociationsResponseDTO updateAssociations(Long narrativeId,
+                                                               NarrativeAssociationsRequestDTO request,
+                                                               String email) {
+        Narrative narrative = resolveNarrative(narrativeId, request.getProjectId(), email);
+
+        List<Long> characterIds = request.getCharacterIds() != null ? request.getCharacterIds() : List.of();
+        List<Long> wikiIds = request.getWikiIds() != null ? request.getWikiIds() : List.of();
+
+        Project project = narrative.getProject();
+
+        Set<StoryCharacter> characters = new HashSet<>();
+        for (Long cid : characterIds) {
+            StoryCharacter character = storyCharacterRepository.findByIdAndProject(cid, project)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Character " + cid + " not found in this project"));
+            characters.add(character);
+        }
+
+        Set<Wiki> places = new HashSet<>();
+        for (Long wid : wikiIds) {
+            Wiki wiki = wikiRepository.findByIdAndProject(wid, project)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                            "Wiki " + wid + " not found in this project"));
+            places.add(wiki);
+        }
+
+        narrative.getCharacters().clear();
+        narrative.getCharacters().addAll(characters);
+        narrative.getPlaces().clear();
+        narrative.getPlaces().addAll(places);
+
+        repository.save(narrative);
+        return toAssociationsDTO(narrative);
+    }
+
+    public NarrativeAssociationsResponseDTO getAssociations(Long narrativeId, Long projectId, String email) {
+        Narrative narrative = resolveNarrative(narrativeId, projectId, email);
+        return toAssociationsDTO(narrative);
+    }
+
+    private Narrative resolveNarrative(Long narrativeId, Long projectId, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated user not found"));
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+
+        if (!project.getUser().getEmail().equals(user.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this project");
+        }
+
+        return repository.findByIdAndProject_Id(narrativeId, projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Narrative not found in this project"));
+    }
+
+    private NarrativeAssociationsResponseDTO toAssociationsDTO(Narrative narrative) {
+        List<NarrativeCharacterDTO> characters = narrative.getCharacters().stream()
+                .map(c -> new NarrativeCharacterDTO(c.getId(), c.getName(), c.getRole()))
+                .toList();
+        List<NarrativeWikiDTO> places = narrative.getPlaces().stream()
+                .map(w -> new NarrativeWikiDTO(w.getId(), w.getTitle()))
+                .toList();
+        return new NarrativeAssociationsResponseDTO(characters, places);
     }
 
     private boolean isEffectivelyEmpty(String content) {
