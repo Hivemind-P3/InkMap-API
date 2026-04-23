@@ -1,6 +1,7 @@
 package com.cenfotec.inkmapapi.controller;
 
 import com.cenfotec.inkmapapi.dto.NarrativeResponseDTO;
+import com.cenfotec.inkmapapi.dto.NarrativeVersionCompareResponseDTO;
 import com.cenfotec.inkmapapi.dto.NarrativeVersionResponseDTO;
 import com.cenfotec.inkmapapi.service.NarrativeVersionService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,16 @@ public class NarrativeVersionController {
             @PathVariable Long versionId,
             Authentication authentication) {
         return ResponseEntity.ok(service.restoreVersion(authentication.getName(), projectId, narrativeId, versionId));
+    }
+
+    @GetMapping("/compare")
+    public ResponseEntity<NarrativeVersionCompareResponseDTO> compareVersions(
+            @PathVariable Long projectId,
+            @PathVariable Long narrativeId,
+            @RequestParam Long versionAId,
+            @RequestParam Long versionBId,
+            Authentication authentication) {
+        return ResponseEntity.ok(service.compareVersions(authentication.getName(), projectId, narrativeId, versionAId, versionBId));
     }
 
     @GetMapping
