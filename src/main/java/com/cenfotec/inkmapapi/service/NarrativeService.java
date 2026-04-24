@@ -30,6 +30,7 @@ public class NarrativeService {
     private final StoryCharacterRepository storyCharacterRepository;
     private final WikiRepository wikiRepository;
     private final ObjectMapper objectMapper;
+    private final GroqNarrativeSuggestionsService groqNarrativeSuggestionsService;
 
     public NarrativeResponseDTO create(CreateNarrativeDTO dto, String username) {
 
@@ -258,5 +259,35 @@ public class NarrativeService {
                 c.getContent(),
                 c.getOrder()
         );
+    }
+
+    public NarrativeSuggestionResponseDTO getSuggestions(Long projectId,
+                                                         NarrativeSuggestionRequestDTO dto,
+                                                         String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found"));
+
+        if(!project.getUser().getEmail().equals(user.getEmail())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        List<Narrative> narratives = repository.findAllByProject_IdOrderByOrderAscIdAsc(projectId);
+
+        if(narratives.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No narrative content found");
+        }
+
+        StringBuilder context = new StringBuilder();
+        context.append("Here are all the chapters of the story:\n\n");
+        for(Narrative n : narratives) {
+            context.append("## Chapter: ").append(n.getTitle()).append("\n");
+            context.append(extractTextFromDelta(n.getContent())).append("\n\n");
+        }
+
+        String suggestions = groqNarrativeSuggestionsService.getSuggestions(context.toString(), dto.getAdditionalInstructions());
+        return new NarrativeSuggestionResponseDTO(suggestions);
     }
 }
