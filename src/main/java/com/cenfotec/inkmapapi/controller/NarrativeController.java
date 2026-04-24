@@ -62,4 +62,11 @@ public class NarrativeController {
                                              Authentication authentication) {
         return ResponseEntity.ok(service.getAssociations(narrativeId, projectId, authentication.getName()));
     }
+
+    @PostMapping("/projects/{projectId}/suggestions")
+    public ResponseEntity<?> getSuggestions(@PathVariable Long projectId,
+                                            @RequestBody NarrativeSuggestionRequestDTO dto,
+                                            Authentication authentication) {
+        return ResponseEntity.ok(service.getSuggestions(projectId, dto, authentication.getName()));
+    }
 }
