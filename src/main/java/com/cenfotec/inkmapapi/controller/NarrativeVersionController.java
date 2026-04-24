@@ -1,0 +1,57 @@
+package com.cenfotec.inkmapapi.controller;
+
+import com.cenfotec.inkmapapi.dto.NarrativeResponseDTO;
+import com.cenfotec.inkmapapi.dto.NarrativeVersionCompareResponseDTO;
+import com.cenfotec.inkmapapi.dto.NarrativeVersionResponseDTO;
+import com.cenfotec.inkmapapi.service.NarrativeVersionService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/projects/{projectId}/narratives/{narrativeId}/versions")
+@RequiredArgsConstructor
+public class NarrativeVersionController {
+
+    private final NarrativeVersionService service;
+
+    @PostMapping
+    public ResponseEntity<NarrativeVersionResponseDTO> createVersion(
+            @PathVariable Long projectId,
+            @PathVariable Long narrativeId,
+            Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(service.createVersion(authentication.getName(), projectId, narrativeId));
+    }
+
+    @PostMapping("/{versionId}/restore")
+    public ResponseEntity<NarrativeResponseDTO> restoreVersion(
+            @PathVariable Long projectId,
+            @PathVariable Long narrativeId,
+            @PathVariable Long versionId,
+            Authentication authentication) {
+        return ResponseEntity.ok(service.restoreVersion(authentication.getName(), projectId, narrativeId, versionId));
+    }
+
+    @GetMapping("/compare")
+    public ResponseEntity<NarrativeVersionCompareResponseDTO> compareVersions(
+            @PathVariable Long projectId,
+            @PathVariable Long narrativeId,
+            @RequestParam Long versionAId,
+            @RequestParam Long versionBId,
+            Authentication authentication) {
+        return ResponseEntity.ok(service.compareVersions(authentication.getName(), projectId, narrativeId, versionAId, versionBId));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<NarrativeVersionResponseDTO>> listVersions(
+            @PathVariable Long projectId,
+            @PathVariable Long narrativeId,
+            Authentication authentication) {
+        return ResponseEntity.ok(service.listVersions(authentication.getName(), projectId, narrativeId));
+    }
+}

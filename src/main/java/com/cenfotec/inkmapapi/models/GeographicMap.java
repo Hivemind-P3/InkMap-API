@@ -6,6 +6,7 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +23,11 @@ public class GeographicMap {
 
     private String name;
 
+    @Column(columnDefinition = "TEXT")
     private String konvaJson;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnail;
 
     @ManyToOne
     @JoinColumn(name = "proyecto_id")
@@ -32,6 +37,6 @@ public class GeographicMap {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @CreationTimestamp
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
